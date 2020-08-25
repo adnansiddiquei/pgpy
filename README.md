@@ -1,5 +1,5 @@
 # pgpy
-A simple module for completing basic PostgreSQL commands in a more pythonic way.
+A module for completing basic PostgreSQL commands in a more pythonic way.
 
 ## Documentation
 This module works by creating object representations of each schema and table in your database. The object represenataions each have several methods which allow you to do basic PostgreSQL commands.
@@ -32,7 +32,7 @@ db.close()
 ```
 
 ### The schema class
-To access the data contained inside any specific schema, to delete any schemas, or to create any new tables, you need to create a schema object from an existing schema inside your database. Let's assume I have a schema in my database called 'my_schema'.
+To access the data contained inside any specific schema, to delete any schemas, or to create any new tables, you need to create a schema object from an existing schema inside your database. Let's assume you have a schema in your database called 'my_schema'.
 
 To create the schema object that references an existing schema in your database, use:
 ```
@@ -58,11 +58,11 @@ To delete the schema and all it's dependants, use:
 my_schema.delete(cascade=True)
 ```
 
-To create a new table called from a pandas DataFrame (called 'new_table') inside this schema, use the following notation:
+To create a new table from a pandas DataFrame (say, called 'new_table') inside this schema, use the following notation:
 ```
 my_schema['new_table'] = new_table
 ```
-If a table already exists inside the 'my_schema' schema called 'new_table' then it will be deleted and replacesd by the new DataFrame.
+If a table already exists inside the 'my_schema' schema called 'new_table' then it will be deleted and replaced by the new DataFrame.
 
 ### The table class
 To access any data inside any tables, you need to create a table class:
