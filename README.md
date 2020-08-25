@@ -1,6 +1,13 @@
 # pgpy
 A module for completing basic PostgreSQL commands in a more pythonic way.
 
+## Installation 
+### Clone
+Run the following command in your terminal:
+```
+git clone https://github.com/adnansiddiquei/pgpy
+```
+
 ## Documentation
 This module works by creating object representations of each schema and table in your database. The object represenataions each have several methods which allow you to do basic PostgreSQL commands.
 
