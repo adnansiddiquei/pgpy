@@ -9,7 +9,7 @@ git clone https://github.com/adnansiddiquei/pgpy
 ```
 
 ## Documentation
-This module works by creating object representations of each schema and table in your database. The object represenataions each have several methods which allow you to do basic PostgreSQL commands.
+This module works by creating object representations of each schema and table in your database. The object representations each have several methods which allow you to do basic PostgreSQL commands.
 
 Start by importing the module like below.
 ```
