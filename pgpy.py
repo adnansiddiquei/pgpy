@@ -110,6 +110,12 @@ class database:
 
     def meta(self):
         """
+        SELECT table_schema, table_name
+            FROM information_schema.tables
+	        WHERE "table_schema" != 'pg_catalog'
+	        AND "table_schema" != 'information_schema'
+	        ORDER BY "table_schema" ASC, "table_name" ASC;
+
         :return: A dict of all schemas and tables in the database
 
             {
@@ -241,6 +247,11 @@ class schema:
 
     def meta(self):
         """
+        SELECT table_name, column_name
+            FROM information_schema.columns
+            WHERE table_schema = [table_schema]
+            ORDER BY table_name ASC, ordinal_position ASC;
+
         :return: A dict of all tables and their columns inside the database.
 
             {
@@ -306,7 +317,6 @@ class schema:
             execute(self.database, query, return_values=False)
         else:
             raise ValueError("Argument 'cascade' needs to be either True or False.")
-
 
 
 class table:
@@ -414,6 +424,12 @@ class table:
 
     def meta(self):
         """
+        SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_schema = [table_schema]
+            AND table_name = [table_name]
+            ORDER BY ordinal_position ASC;
+
         :return: A dict containing the column names and their data type, in order of ordinal position.
 
                 {
