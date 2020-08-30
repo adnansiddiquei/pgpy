@@ -9,6 +9,12 @@ git clone https://github.com/adnansiddiquei/pgpy
 ```
 
 ## Documentation
+### Requirements
+Using pgpy requires the following packages, which can all be installed via pip:
+- psycopg2
+- numpy
+- pandas
+
 This module works by creating object representations of each schema and table in your database. The object representations each have several methods which allow you to do basic PostgreSQL commands.
 
 Start by importing the module like below.
