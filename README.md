@@ -31,7 +31,7 @@ db = pgpy.database(user='username123', password='password123', host='127.0.0.1',
                     port='5432', database='postgres')
 ```
 
-To view the metadata (schema name, tables and columns) for the database, use:
+To view the metadata (all the schemas) for the database, use:
 ```
 db.meta()
 ```
@@ -54,7 +54,7 @@ To create the schema object that references an existing schema in your database,
 my_schema = db['my_schema']
 ```
 
-To access the metadata (schema name, tables and column names) for this schema, you can use your newly created object, or direct indexing from the db object:
+To access the metadata (schema name and table names) for this schema, you can use your newly created object, or direct indexing from the db object:
 ```
 my_schema.meta()  # option 1
 db['my_schema'].meta()  # option 2
