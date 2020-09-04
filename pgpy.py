@@ -110,12 +110,6 @@ class database:
 
     def meta(self):
         """
-        SELECT table_schema, table_name
-            FROM information_schema.tables
-	        WHERE "table_schema" != 'pg_catalog'
-	        AND "table_schema" != 'information_schema'
-	        ORDER BY "table_schema" ASC, "table_name" ASC;
-
         :return: A dict of all schemas and tables in the database
 
             {
@@ -125,24 +119,30 @@ class database:
             }
         """
 
-        query = """SELECT table_schema, table_name
-                        FROM information_schema.tables
-	                    WHERE "table_schema" != 'pg_catalog'
-	                    AND "table_schema" != 'information_schema'
-	                    ORDER BY "table_schema" ASC, "table_name" ASC;
+        query = """SELECT schema_name FROM information_schema.schemata
+                        WHERE schema_name != 'pg_catalog'
+                        AND schema_name != 'pg_temp_1'
+                        AND schema_name != 'information_schema'
+                        AND schema_name != 'pg_toast'
+                        AND schema_name != 'pg_toast_temp_1';
                 """
 
-        rows = execute(self, query)  # execute above query
-        # the output will be structured like [(table_schema, table_name), (table_schema, table_name)...]
+        schema_list = execute(self, query)  # get list of schemas
+        schema_list = list(np.array(schema_list).flatten())  # flatten the rows into a 1-d array
 
-        data = {}  # will store the schemas/tables
+        data = {}
 
-        for row in rows:
-            # convert the 'rows' list into a dict
-            if row[0] in data.keys():  # if the schema is already in the 'data' dict
-                data[row[0]].append(row[1])  # append the new table onto the dict
-            else:
-                data[row[0]] = [row[1]]
+        for schema in schema_list:
+            query = """SELECT table_name
+                            FROM information_schema.tables
+                            WHERE "table_schema" = '{0}'
+                            ORDER BY "table_name" ASC;
+                    """.format(schema)
+
+            table_list = execute(self, query)
+            table_list = list(np.array(table_list).flatten())
+
+            data[schema] = table_list
 
         return data
 
