@@ -184,7 +184,7 @@ class schema:
         :return: None
         """
 
-        if key in self.meta()['columns'].keys():  # if table already exists then delete it
+        if key in self.meta()['tables'].keys():  # if table already exists then delete it
             self[key].delete()
 
         dataframe = value.copy()
