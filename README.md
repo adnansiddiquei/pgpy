@@ -31,7 +31,7 @@ db = pgpy.database(user='username123', password='password123', host='127.0.0.1',
                     port='5432', database='postgres')
 ```
 
-To view the metadata (schemas and tables) for the database, use:
+To view the metadata (schema name, tables and columns) for the database, use:
 ```
 db.meta()
 ```
@@ -54,18 +54,15 @@ To create the schema object that references an existing schema in your database,
 my_schema = db['my_schema']
 ```
 
-To access the metadata (tables and column names) for this schema, you can use your newly created object, or direct indexing from the db object:
+To access the metadata (schema name, tables and column names) for this schema, you can use your newly created object, or direct indexing from the db object:
 ```
 my_schema.meta()  # option 1
 db['my_schema'].meta()  # option 2
 ```
 
-To get the name of the schema or alter the name of the schema, change the 'name' property:
+To alter the name of the schema:
 ```
-print(my_schema.name)  # will print out 'my_schema'
-my_schema.name = 'my_new_schema'  # will change the name of the schema to 'my_new_schema'
-
-my_schema.name = 'my_schema'  # for the time being, lets change it back
+my_schema.rename('my_new_schema')  # will change the name of the schema to 'my_new_schema'
 ```
 
 To delete the schema and all it's dependants, use:
@@ -86,7 +83,7 @@ my_table = db['my_schema']['my_table']  # option 1
 my_table = my_schema['my_table']  # option 2, using the object we previously created
 ```
 
-To access the metadata (column names and their data types) for this table, use:
+To access the metadata (table name, column names and their data types) for this table, use:
 ```
 my_table.meta()
 ```
@@ -106,18 +103,18 @@ Do not inlcude the SELECT or FROM clauses in the select() method shown above. By
 
 To change the name of the table, alter the 'name' property:
 ```
-my_table.name = 'my_new_table'
+my_table.rename('new_table_name')
 ```
 
 To change the column names, alter the 'columns' propety by providing a new list of column names in the correct order, or a dict containing the old and new column names. If providing a list, then the list must be of the same length as the number of total columns. If you only wish to change one, or a few column names, then use option 2.
 ```
-my_table.columns = ['new_column1_name', 'new_column2_name', 'new_column3_name']  # option 1
+my_table.rename_columns(['new_column1_name', 'new_column2_name', 'new_column3_name'])  # option 1
 
 # option 2
-my_table.columns = {
+my_table.rename_columns({
     'column1': 'new_column1_name'
     'column3': 'new_column3_name'
-}
+})
 ```
 
 To delete the table:
