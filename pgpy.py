@@ -94,7 +94,7 @@ class database:
         :return: object representing the schema.
         """
 
-        if item in self.meta().keys():
+        if item in self.meta()['schemas']:
             return schema(self, item)
         else:
             raise ValueError("The '{0}' schema does not exist.".format(item))
@@ -110,12 +110,10 @@ class database:
 
     def meta(self):
         """
-        :return: A dict of all schemas and tables in the database
+        :return: A dict of all schemas inside the database.
 
             {
-                schema1: [table1, table2, table3],
-                schema2: [table1]
-                ...
+                schemas: ['schema1', ...]
             }
         """
 
@@ -130,19 +128,7 @@ class database:
         schema_list = execute(self, query)  # get list of schemas
         schema_list = list(np.array(schema_list).flatten())  # flatten the rows into a 1-d array
 
-        data = {}
-
-        for schema in schema_list:
-            query = """SELECT table_name
-                            FROM information_schema.tables
-                            WHERE "table_schema" = '{0}'
-                            ORDER BY "table_name" ASC;
-                    """.format(schema)
-
-            table_list = execute(self, query)
-            table_list = list(np.array(table_list).flatten())
-
-            data[schema] = table_list
+        data = {'schemas': schema_list}
 
         return data
 
@@ -183,7 +169,7 @@ class schema:
         :return: object representing the table.
         """
 
-        if item in self.meta()['tables'].keys():
+        if item in self.meta()['tables']:
             return table(self.database, self.table_schema, item)
         else:
             raise ValueError("The '{0}' table does not exist.".format(item))
@@ -246,34 +232,22 @@ class schema:
             raise
 
     def meta(self):
-        """:return: A dict of all metadata for the schema: schema name; tables and their columns.
+        """:return: A dict of all metadata for the schema: schema name; tables.
 
             {
                 'name': 'schema_name'
-                'tables': {
-                    'table1': ['col1', 'col2', 'col3'],
-                    'table2': ['col1', 'col2']
-                }
+                'tables': ['table1', ...]
             }
         """
 
-        query = """SELECT table_name, column_name
+        query = """SELECT DISTINCT table_name
                         FROM information_schema.columns
                         WHERE table_schema = '{0}'
-                        ORDER BY table_name ASC, ordinal_position ASC;
+                        ORDER BY table_name ASC;
                 """.format(self.table_schema)
 
-        rows = execute(self.database, query)  # execute above query
-        # the output will be structured like [(table_name, column_name), (table_name, column_name)...]
-
-        tables = {}  # will store the tables/columns
-
-        for row in rows:
-            # convert the 'rows' list into a dict
-            if row[0] in tables.keys():  # if the schema is already in the 'data' dict
-                tables[row[0]].append(row[1])  # append the new table onto the dict
-            else:
-                tables[row[0]] = [row[1]]
+        tables = execute(self.database, query)  # execute above query
+        tables = list(np.array(tables).flatten())  # flatten the rows into a 1-d array
 
         data = {
             'name': self.table_schema,
