@@ -183,7 +183,7 @@ class schema:
         :return: object representing the table.
         """
 
-        if item in self.meta().keys():
+        if item in self.meta()['tables'].keys():
             return table(self.database, self.table_schema, item)
         else:
             raise ValueError("The '{0}' table does not exist.".format(item))
@@ -198,7 +198,7 @@ class schema:
         :return: None
         """
 
-        if key in self.meta().keys():  # if table already exists then delete it
+        if key in self.meta()['columns'].keys():  # if table already exists then delete it
             self[key].delete()
 
         dataframe = value.copy()
@@ -246,18 +246,14 @@ class schema:
             raise
 
     def meta(self):
-        """
-        SELECT table_name, column_name
-            FROM information_schema.columns
-            WHERE table_schema = [table_schema]
-            ORDER BY table_name ASC, ordinal_position ASC;
-
-        :return: A dict of all tables and their columns inside the database.
+        """:return: A dict of all metadata for the schema: schema name; tables and their columns.
 
             {
-                table1: [col1, col2, col33],
-                table2: [col1, col2]
-                ...
+                'name': 'schema_name'
+                'tables': {
+                    'table1': ['col1', 'col2', 'col3'],
+                    'table2': ['col1', 'col2']
+                }
             }
         """
 
@@ -270,14 +266,19 @@ class schema:
         rows = execute(self.database, query)  # execute above query
         # the output will be structured like [(table_name, column_name), (table_name, column_name)...]
 
-        data = {}  # will store the tables/columns
+        tables = {}  # will store the tables/columns
 
         for row in rows:
             # convert the 'rows' list into a dict
-            if row[0] in data.keys():  # if the schema is already in the 'data' dict
-                data[row[0]].append(row[1])  # append the new table onto the dict
+            if row[0] in tables.keys():  # if the schema is already in the 'data' dict
+                tables[row[0]].append(row[1])  # append the new table onto the dict
             else:
-                data[row[0]] = [row[1]]
+                tables[row[0]] = [row[1]]
+
+        data = {
+            'name': self.table_schema,
+            'tables': tables
+        }
 
         return data
 
@@ -285,15 +286,8 @@ class schema:
     def table_schema(self):  # retrieve schema name
         return self._table_schema
 
-    @property
-    def name(self):  # retrieve schema name
-        # this does the same as above but 'name' is more intuitive for the user while 'table_schema'
-        # will be used for anything in the code
-        return self._table_schema
-
-    @name.setter
-    def name(self, new_name):  # alters the schema name when this value is altered
-        query = 'ALTER SCHEMA "{0}" RENAME TO "{1}";'.format(self.name, new_name)
+    def rename(self, new_name):  # alters the schema name
+        query = 'ALTER SCHEMA "{0}" RENAME TO "{1}";'.format(self.table_schema, new_name)
         execute(self.database, query, return_values=False)
         self._table_schema = new_name
 
@@ -333,7 +327,7 @@ class table:
     def __getitem__(self, item):
         # item = column name or list of column names
 
-        columns = self.meta().keys()  # a list of all columns in the database
+        columns = self.meta()['columns'].keys()  # a list of all columns in the database
 
         is_iterable = (type(item) == list) | (type(item) == tuple)  # checks if a list of columns was entered
 
@@ -365,26 +359,50 @@ class table:
 
         return data
 
+    def meta(self):
+        """:return: A dict containing all the metadata of the table: name; column names and their data type.
+
+                {
+                    'name': 'table name',
+                    'columns': {
+                        column1: data_type,
+                        column2: data_type,
+                    }
+                }
+        """
+
+        query = """SELECT column_name, data_type 
+                        FROM information_schema.columns
+                        WHERE table_schema = '{0}'
+                        AND table_name = '{1}'
+                        ORDER BY ordinal_position ASC;
+                """.format(self.table_schema, self.table_name)
+
+        rows = execute(self.database, query)  # execute above query
+        # the output will be structured like [(columns_name, data_type), (column_name, data_type)...]
+
+        columns = {}  # will store the column/data type
+
+        for row in rows:
+            columns[row[0]] = row[1]
+
+        data = {
+            'name': self._table_name,
+            'columns': columns
+        }
+
+        return data
+
     @property
     def table_name(self):
         return self._table_name
 
-    @property
-    def name(self):
-        return self._table_name
-
-    @name.setter
-    def name(self, new_name):  # alters the table name when this value is altered
-        query = 'ALTER TABLE "{0}"."{1}" RENAME TO "{2}";'.format(self.table_schema, self.name, new_name)
+    def rename(self, new_name):  # alters the table name
+        query = 'ALTER TABLE "{0}"."{1}" RENAME TO "{2}";'.format(self.table_schema, self.table_name, new_name)
         execute(self.database, query, return_values=False)
         self._table_name = new_name
 
-    @property
-    def columns(self):
-        return self._columns
-
-    @columns.setter
-    def columns(self, new_columns):
+    def rename_columns(self, new_columns):
         """
         Changes the column names of the database using a dict or list.
 
@@ -394,7 +412,7 @@ class table:
 
         :return: None
         """
-        old_columns = list(self.meta().keys())
+        old_columns = list(self.meta()['columns'].keys())
 
         query = ''
 
@@ -421,40 +439,6 @@ class table:
                 )
 
         execute(self.database, query, return_values=False)
-
-    def meta(self):
-        """
-        SELECT column_name, data_type
-            FROM information_schema.columns
-            WHERE table_schema = [table_schema]
-            AND table_name = [table_name]
-            ORDER BY ordinal_position ASC;
-
-        :return: A dict containing the column names and their data type, in order of ordinal position.
-
-                {
-                    column1: data_type,
-                    column2: data_type,
-                    ...
-                }
-        """
-
-        query = """SELECT column_name, data_type 
-                        FROM information_schema.columns
-                        WHERE table_schema = '{0}'
-                        AND table_name = '{1}'
-                        ORDER BY ordinal_position ASC;
-                """.format(self.table_schema, self.table_name)
-
-        rows = execute(self.database, query)  # execute above query
-        # the output will be structured like [(columns_name, data_type), (column_name, data_type)...]
-
-        data = {}  # will store the column/data type
-
-        for row in rows:
-            data[row[0]] = row[1]
-
-        return data
 
     def delete(self):
         """
