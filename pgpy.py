@@ -7,8 +7,6 @@ Version 2.
 NOTES:
 - will throw and error when I initialise a table, then change the name of the schema that the table is in
     as the table is not aware of its parent schema's name change.
-    
-    test 08/10/2020
 """
 
 import psycopg2 as pg2
